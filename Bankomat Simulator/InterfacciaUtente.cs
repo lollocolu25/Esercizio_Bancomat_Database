@@ -26,7 +26,7 @@ namespace BankomatSimulator
 
         public InterfacciaUtente(SortedList<int,Banca> banche)
         {
-            _banche = banche;
+            _banche = new SortedList<int, Banca>();
         }
 
         /// <summary>
@@ -80,9 +80,34 @@ namespace BankomatSimulator
             {
                 StampaIntestazione("Selezione Banca");
 
-                foreach (var banca in _banche)
+                using (var ctx = new EsercitazioneEntities())
                 {
-                    Console.WriteLine($"{banca.Key.ToString()} - {banca.Value.Nome}");
+                    Console.WriteLine("lista banche:");
+                    int key = 0;
+                    foreach (var banca_db in ctx.Banches)
+                    {
+                        key++;
+                        Banca banca = new Banca();
+                        banca.Nome = banca_db.Nome;
+                       foreach(var utenti_db in banca_db.Utentis)
+                        {
+                            Utente utente = new Utente();
+                            utente.NomeUtente = utenti_db.NomeUtente;
+                            utente.Password = utenti_db.Password;
+                            
+                            var contocorrente_db = utenti_db.ContiCorrentes.First();
+                            ContoCorrente contoCorrente = new ContoCorrente();
+                            contoCorrente.Saldo = contocorrente_db.Saldo;
+                            utente.contoCorrente = contoCorrente;
+
+                            banca.Utenti.Add(utente);
+                        }
+
+                        _banche.Add(key, banca);
+
+                        Console.WriteLine($"{key} - {banca_db.Nome} ");
+                    }
+                    
                 }
                 Console.WriteLine("0 - Uscita");
 
